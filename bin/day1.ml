@@ -8,6 +8,12 @@ let max_of_list input =
   | [] -> None
   | h :: t -> Some (List.fold t ~init:h ~f:Base.Int.max)
 
+let get_top_three x top_three =
+  List.take (List.sort ~compare:Int.descending (x :: top_three)) 3
+
+let max_three_sums sums =
+  List.fold ~init:[] ~f:(fun top_three x -> get_top_three x top_three) sums
+
 let sum_of_group group =
   group
   |> List.filter ~f:(fun s -> not (String.is_empty s))
@@ -21,6 +27,14 @@ let sum_groups file =
 
 let () =
   let sums = sum_groups "./input/day1.txt" in
-  match max_of_list sums with
+
+  (* Part 1 *)
+  Stdio.print_endline "Largest calories carried by elf: ";
+  (match max_of_list sums with
   | None -> Stdio.print_endline "No input"
-  | Some m -> Stdio.printf "%d\n" m
+  | Some m -> Stdio.printf "%d\n\n" m);
+
+  (* Part 2 *)
+  Stdio.print_endline "Sum of top 3 calories carried by elves: ";
+  let r = max_three_sums sums in
+  Stdio.printf "%d\n\n" (List.fold ~init:0 ~f:( + ) r)

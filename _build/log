@@ -3,7 +3,7 @@
 # Shared cache: disabled
 # Workspace root: /home/scottfo/Projects/languages/ocaml/aoc
 # Auto-detected concurrency: 12
-$ /home/scottfo/.opam/default/bin/ocamlc.opt -config > /tmp/dune_a26d36_output
+$ /home/scottfo/.opam/default/bin/ocamlc.opt -config > /tmp/dune_b5d259_output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
