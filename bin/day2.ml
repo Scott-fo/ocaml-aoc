@@ -1,51 +1,71 @@
 open Base
 
-type move = Rock | Paper | Scissors
-type result = Win | Lose | Draw
+module Result = struct
+  type t = Win | Lose | Draw
 
-let get_moves (o, y) =
-  match (o, y) with
-  | "A", "X" -> (Rock, Rock)
-  | "A", "Y" -> (Rock, Paper)
-  | "A", "Z" -> (Rock, Scissors)
-  | "B", "X" -> (Paper, Rock)
-  | "B", "Y" -> (Paper, Paper)
-  | "B", "Z" -> (Paper, Scissors)
-  | "C", "X" -> (Scissors, Rock)
-  | "C", "Y" -> (Scissors, Paper)
-  | "C", "Z" -> (Scissors, Scissors)
-  | _ -> failwith "Unexpected move"
+  let of_string = function
+    | "X" -> Lose
+    | "Y" -> Draw
+    | "Z" -> Win
+    | s -> failwith (Printf.sprintf "Unexpected result string: %s" s)
 
-let get_result yours opponents =
-  match (yours, opponents) with
-  | Rock, Paper -> Lose
-  | Rock, Scissors -> Win
-  | Rock, Rock -> Draw
-  | Paper, Scissors -> Lose
-  | Paper, Rock -> Win
-  | Paper, Paper -> Draw
-  | Scissors, Rock -> Lose
-  | Scissors, Paper -> Win
-  | Scissors, Scissors -> Draw
+  let score = function Lose -> 0 | Draw -> 3 | Win -> 6
+end
 
-let get_move_score m = match m with Rock -> 1 | Paper -> 2 | Scissors -> 3
-let get_result_score r = match r with Win -> 6 | Lose -> 0 | Draw -> 3
+module Move = struct
+  type t = Rock | Paper | Scissors
+
+  let of_string = function
+    | "A" | "X" -> Rock
+    | "B" | "Y" -> Paper
+    | "C" | "Z" -> Scissors
+    | s -> failwith (Printf.sprintf "Unexpected move string: %s" s)
+
+  let get_win = function Rock -> Paper | Paper -> Scissors | Scissors -> Rock
+  let get_lose = function Rock -> Scissors | Paper -> Rock | Scissors -> Paper
+  let score = function Rock -> 1 | Paper -> 2 | Scissors -> 3
+  let equals m1 m2 = m1 = m2
+end
+
+let get_result ym om =
+  if Base.Poly.( = ) ym om then Result.Draw
+  else
+    match (ym, om) with
+    | Move.Rock, Move.Paper -> Result.Lose
+    | Move.Rock, Move.Scissors -> Result.Win
+    | Move.Paper, Move.Scissors -> Result.Lose
+    | Move.Paper, Move.Rock -> Result.Win
+    | Move.Scissors, Move.Rock -> Result.Lose
+    | Move.Scissors, Move.Paper -> Result.Win
 
 let read_lines file =
   In_channel.with_open_text file In_channel.input_all |> String.split_lines
 
-let play_round line =
-  match String.split line ~on:' ' with
-  | [ o; y ] ->
-      let opponent_move, your_move = get_moves (o, y) in
-      let result = get_result your_move opponent_move in
-      let result_score = get_result_score result in
-      let move_score = get_move_score your_move in
-      result_score + move_score
-  | _ -> failwith "Invalid input line"
+let part_2 line =
+  let om = String.get line 0 |> Char.to_string |> Move.of_string in
+  let res = String.get line 2 |> Char.to_string |> Result.of_string in
+  let ym =
+    match res with
+    | Lose -> Move.get_lose om
+    | Draw -> om
+    | Win -> Move.get_win om
+  in
+  Result.score res + Move.score ym
+
+let part_1 line =
+  let om = String.get line 0 |> Char.to_string |> Move.of_string in
+  let ym = String.get line 2 |> Char.to_string |> Move.of_string in
+  let result = get_result ym om in
+  Result.score result + Move.score ym
+
+let play_games file f =
+  read_lines file |> List.map ~f |> List.fold ~init:0 ~f:( + )
 
 let () =
-  let lines = read_lines "./input/day2.txt" in
-  let scores = List.map lines ~f:play_round in
-  let total_score = List.fold ~init:0 ~f:( + ) scores in
-  Stdio.printf "Total score: %d\n" total_score
+  (*Part 1*)
+  Printf.sprintf "Part 1 Total score: %d" (play_games "./input/day2.txt" part_1)
+  |> Stdio.print_endline;
+
+  (*Part 2*)
+  Printf.sprintf "Part 2 Total score: %d" (play_games "./input/day2.txt" part_2)
+  |> Stdio.print_endline
