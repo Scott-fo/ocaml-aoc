@@ -24,19 +24,21 @@ module Move = struct
   let get_win = function Rock -> Paper | Paper -> Scissors | Scissors -> Rock
   let get_lose = function Rock -> Scissors | Paper -> Rock | Scissors -> Paper
   let score = function Rock -> 1 | Paper -> 2 | Scissors -> 3
-  let equals m1 m2 = m1 = m2
 end
 
-let get_result ym om =
-  if Base.Poly.( = ) ym om then Result.Draw
-  else
+module Game = struct
+  let get_result (ym : Move.t) (om : Move.t) : Result.t =
     match (ym, om) with
-    | Move.Rock, Move.Paper -> Result.Lose
-    | Move.Rock, Move.Scissors -> Result.Win
-    | Move.Paper, Move.Scissors -> Result.Lose
-    | Move.Paper, Move.Rock -> Result.Win
-    | Move.Scissors, Move.Rock -> Result.Lose
-    | Move.Scissors, Move.Paper -> Result.Win
+    | Rock, Paper -> Lose
+    | Rock, Scissors -> Win
+    | Rock, Rock -> Draw
+    | Paper, Scissors -> Lose
+    | Paper, Rock -> Win
+    | Paper, Paper -> Draw
+    | Scissors, Rock -> Lose
+    | Scissors, Paper -> Win
+    | Scissors, Scissors -> Draw
+end
 
 let read_lines file =
   In_channel.with_open_text file In_channel.input_all |> String.split_lines
@@ -55,7 +57,7 @@ let part_2 line =
 let part_1 line =
   let om = String.get line 0 |> Char.to_string |> Move.of_string in
   let ym = String.get line 2 |> Char.to_string |> Move.of_string in
-  let result = get_result ym om in
+  let result = Game.get_result ym om in
   Result.score result + Move.score ym
 
 let play_games file f =
